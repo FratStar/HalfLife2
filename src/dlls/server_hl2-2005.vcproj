@@ -4268,6 +4268,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\weapon_ak47.cpp"
+					>
+				</File>
+				<File
 					RelativePath="hl2_dll\weapon_alyxgun.cpp"
 					>
 				</File>
