@@ -20,7 +20,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define ROF 0.075f //RPS, 60 Sec / 800 Rounds = 0.075f
+#define ROF 0.1f //600 RPM //RPS, 60 Sec / 800 Rounds = 0.075f
 
 extern ConVar    sk_plr_dmg_smg1_grenade;	
 
