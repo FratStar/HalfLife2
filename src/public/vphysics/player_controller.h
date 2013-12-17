@@ -32,6 +32,9 @@ public:
 	virtual int GetShadowPosition( Vector *position, QAngle *angles ) = 0;
 	virtual void StepUp( float height ) = 0;
 	virtual void Jump() = 0;
+	//Lemuel Wilson
+	virtual void DoubleJump() = 0;
+	//Lemuel Wilson
 	virtual void GetShadowVelocity( Vector *velocity ) = 0;
 	virtual IPhysicsObject *GetObject() = 0;
 	virtual void GetLastImpulse( Vector *pOut ) = 0;

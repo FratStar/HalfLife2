@@ -241,6 +241,9 @@ public:
 	virtual void			PlayerDeathThink( void );
 
 	virtual void			Jump( void );
+	//Lemuel Wilson
+	virtual void			DoubleJump( void );
+	//Lemuel Wilson
 	virtual void			Duck( void );
 
 	const char				*GetTracerType( void );

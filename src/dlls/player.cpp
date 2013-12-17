@@ -2727,6 +2727,11 @@ float CBasePlayer::GetHeldObjectMass( IPhysicsObject *pHeldObject )
 void CBasePlayer::Jump()
 {
 }
+//Lemuel Wilson
+void CBasePlayer::DoubleJump()
+{
+}
+//Lemuel Wilson
 
 void CBasePlayer::Duck( )
 {
@@ -3353,6 +3358,12 @@ void CBasePlayer::PreThink(void)
 		// else Jump
 		Jump();
 	}
+//Lemuel Wilson
+	if ((m_nButtons & IN_JUMP) & !( GetFlags() & FL_ONGROUND) )
+	{
+		Jump();
+	}
+//Lemuel Wilson
 
 	// If trying to duck, already ducked, or in the process of ducking
 	if ((m_nButtons & IN_DUCK) || (GetFlags() & FL_DUCKING) || (m_afPhysicsFlags & PFLAG_DUCKING) )
@@ -4193,6 +4204,8 @@ void CBasePlayer::PostThinkVPhysics( void )
 			m_pPhysicsController->StepUp( g_pMoveData->m_outStepHeight );
 		}
 		m_pPhysicsController->Jump();
+		//Lemuel Wilson
+		m_pPhysicsController->DoubleJump();
 	}
 	g_pMoveData->m_outStepHeight = 0.0f;
 	
