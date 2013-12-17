@@ -1930,10 +1930,12 @@ void CGameMovement::PlaySwimSound()
 //-----------------------------------------------------------------------------
 bool CGameMovement::CheckJumpButton( void )
 {
+	int dj = 0;
 	if (player->pl.deadflag)
 	{
 		mv->m_nOldButtons |= IN_JUMP ;	// don't jump again until released
 		return false;
+		
 	}
 
 	// See if we are waterjumping.  If so, decrement count and return.
@@ -1969,20 +1971,26 @@ bool CGameMovement::CheckJumpButton( void )
 	}
 
 	// No more effect
- 	if (player->GetGroundEntity() == NULL)
+	while ((player->GetGroundEntity() == NULL) && dj > 1)
 	{
 		mv->m_nOldButtons |= IN_JUMP;
 		return false;		// in air, so no effect
+		dj++;
 	}
-
+ 	/*if (player->GetGroundEntity() == NULL)
+	{ 
+		mv->m_nOldButtons |= IN_JUMP;
+		return false;		// in air, so no effect
+	}*/
+	
 	// Don't allow jumping when the player is in a stasis field.
 #ifndef HL2_EPISODIC
 	if ( player->m_Local.m_bSlowMovement )
 		return false;
 #endif
 
-	if ( mv->m_nOldButtons & IN_JUMP )
-		return false;		// don't pogo stick
+	/*if ( mv->m_nOldButtons & IN_JUMP )
+		return false;		// don't pogo stick*/
 
 	// Cannot jump will in the unduck transition.
 	if ( player->m_Local.m_bDucking && (  player->GetFlags() & FL_DUCKING ) )

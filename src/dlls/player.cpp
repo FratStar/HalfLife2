@@ -2727,11 +2727,6 @@ float CBasePlayer::GetHeldObjectMass( IPhysicsObject *pHeldObject )
 void CBasePlayer::Jump()
 {
 }
-//Lemuel Wilson
-void CBasePlayer::DoubleJump()
-{
-}
-//Lemuel Wilson
 
 void CBasePlayer::Duck( )
 {
@@ -4204,8 +4199,6 @@ void CBasePlayer::PostThinkVPhysics( void )
 			m_pPhysicsController->StepUp( g_pMoveData->m_outStepHeight );
 		}
 		m_pPhysicsController->Jump();
-		//Lemuel Wilson
-		m_pPhysicsController->DoubleJump();
 	}
 	g_pMoveData->m_outStepHeight = 0.0f;
 	
