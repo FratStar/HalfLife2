@@ -125,6 +125,7 @@ extern CMultiDamage g_MultiDamage;
 // Multidamage accessors
 void ClearMultiDamage( void );
 void ApplyMultiDamage( void );
+
 void AddMultiDamage( const CTakeDamageInfo &info, CBaseEntity *pEntity );
 
 //-----------------------------------------------------------------------------

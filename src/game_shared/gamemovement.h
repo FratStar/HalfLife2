@@ -90,6 +90,12 @@ protected:
 
 	// Only used by players.  Moves along the ground when player is a MOVETYPE_WALK.
 	virtual void	WalkMove( void );
+	
+	//Lemuel Wilson
+	virtual void	WalkMove2( void );
+
+	virtual void	Dash( void );
+	//Lemuel Wilson
 
 	// Try to keep a walking player on the ground when running down slopes etc
 	void			StayOnGround( void );

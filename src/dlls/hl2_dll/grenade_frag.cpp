@@ -369,6 +369,22 @@ CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, 
 	return pGrenade;
 }
 
+//Lemuel
+CBaseGrenade *Fraggrenade_Create2( const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned )
+{
+	// Don't set the owner here, or the player can't interact with grenades he's thrown
+	CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create( "npc_grenade_frag", position, angles, pOwner );
+	
+	pGrenade->SetTimer( timer, timer - 1.5f );
+	pGrenade->SetVelocity( velocity, angVelocity );
+	pGrenade->SetThrower( ToBaseCombatCharacter( pOwner ) );
+	pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
+	pGrenade->SetCombineSpawned( combineSpawned );
+	Fraggrenade_Create( position, angles, velocity, AngularImpulse(600,random->RandomInt(-1200,1200),0), pOwner, timer, false );
+	return pGrenade;
+}
+//Lemuel
+
 bool Fraggrenade_WasPunted( const CBaseEntity *pEntity )
 {
 	const CGrenadeFrag *pFrag = dynamic_cast<const CGrenadeFrag *>( pEntity );

@@ -4296,6 +4296,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\weapon_cluster.cpp"
+					>
+				</File>
+				<File
 					RelativePath="hl2_dll\weapon_crossbow.cpp"
 					>
 				</File>
@@ -4312,6 +4316,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\weapon_flamebow.cpp"
+					>
+				</File>
+				<File
 					RelativePath="hl2_dll\weapon_frag.cpp"
 					>
 				</File>
@@ -4325,6 +4333,10 @@
 				</File>
 				<File
 					RelativePath="hl2_dll\weapon_pistol.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\weapon_plasmacannon.cpp"
 					>
 				</File>
 				<File

@@ -35,6 +35,11 @@ STUB_WEAPON_CLASS( weapon_357, Weapon357, C_BaseHLCombatWeapon );
 STUB_WEAPON_CLASS( weapon_crossbow, WeaponCrossbow, C_BaseHLCombatWeapon );
 STUB_WEAPON_CLASS( weapon_slam, Weapon_SLAM, C_BaseHLCombatWeapon );
 STUB_WEAPON_CLASS( weapon_crowbar, WeaponCrowbar, C_BaseHLBludgeonWeapon );
+//Lemuel Wilson
+STUB_WEAPON_CLASS( weapon_flamebow, WeaponFlamebow, C_BaseHLCombatWeapon );
+STUB_WEAPON_CLASS( weapon_cluster, WeaponCluster, C_BaseHLCombatWeapon );
+STUB_WEAPON_CLASS( weapon_plasmacannon, WeaponPlasmaCannon, C_BaseHLCombatWeapon );
+//Lemuel Wilson
 #ifdef HL2_EPISODIC
 STUB_WEAPON_CLASS( weapon_hopwire, WeaponHopwire, C_BaseHLCombatWeapon );
 #endif

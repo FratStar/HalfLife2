@@ -2325,6 +2325,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\c_weapon_flamebow.cpp"
+					>
+				</File>
+				<File
 					RelativePath="hl2_hud\c_weapon_physcannon.cpp"
 					>
 				</File>
@@ -3607,11 +3611,11 @@
 				>
 			</File>
 			<File
-				RelativePath="iinput.h"
+				RelativePath="..\public\vgui\IInput.h"
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h"
+				RelativePath="iinput.h"
 				>
 			</File>
 			<File
@@ -3931,11 +3935,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h"
+				RelativePath="menu.h"
 				>
 			</File>
 			<File
-				RelativePath="menu.h"
+				RelativePath="..\public\vgui_controls\Menu.h"
 				>
 			</File>
 			<File

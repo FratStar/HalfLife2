@@ -1602,6 +1602,154 @@ void CGameMovement::WalkMove( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Lemuel Wilson
+//-----------------------------------------------------------------------------
+void CGameMovement::WalkMove2( void )
+{
+	int i;
+
+	Vector wishvel;
+	float spd;
+	float fmove, smove;
+	Vector wishdir;
+	float wishspeed;
+
+	Vector dest;
+	trace_t pm;
+	Vector forward, right, up;
+
+	AngleVectors (mv->m_vecViewAngles, &forward, &right, &up);  // Determine movement angles
+
+	CHandle< CBaseEntity > oldground;
+	oldground = player->GetGroundEntity();
+	
+	// Copy movement amounts
+	fmove = mv->m_flForwardMove;
+	smove = mv->m_flSideMove;
+	
+	// Zero out z components of movement vectors
+	if ( g_bMovementOptimizations )
+	{
+		if ( forward[2] != 0 )
+		{
+			forward[2] = 0;
+			VectorNormalize( forward );
+		}
+
+		if ( right[2] != 0 )
+		{
+			right[2] = 0;
+			VectorNormalize( right );
+		}
+	}
+	else
+	{
+		forward[2] = 0;
+		right[2]   = 0;
+		
+		VectorNormalize (forward);  // Normalize remainder of vectors.
+		VectorNormalize (right);    // 
+	}
+
+	for (i=0 ; i<2 ; i++)       // Determine x and y parts of velocity
+		wishvel[i] = forward[i]*fmove + right[i]*smove;
+	
+	wishvel[2] = 0;             // Zero out z part of velocity
+
+	VectorCopy (wishvel, wishdir);   // Determine maginitude of speed of move
+	wishspeed = VectorNormalize(wishdir);
+
+	//
+	// Clamp to server defined max speed
+	//
+	if ((wishspeed != 0.0f) && (wishspeed > mv->m_flMaxSpeed))
+	{
+		VectorScale (wishvel, mv->m_flMaxSpeed/wishspeed, wishvel);
+		wishspeed = mv->m_flMaxSpeed;
+		wishspeed = wishspeed * 2;
+	}
+
+	// Set pmove velocity
+	mv->m_vecVelocity[2] = 0;
+	Accelerate ( wishdir, wishspeed, sv_accelerate.GetFloat() );
+	mv->m_vecVelocity[2] = 0;
+
+	// Add in any base velocity to the current velocity.
+	VectorAdd (mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+
+	spd = VectorLength( mv->m_vecVelocity );
+
+	if ( spd < 1.0f )
+	{
+		mv->m_vecVelocity.Init();
+		// Now pull the base velocity back out.   Base velocity is set if you are on a moving object, like a conveyor (or maybe another monster?)
+		VectorSubtract( mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+		return;
+	}
+
+	// first try just moving to the destination	
+	dest[0] = mv->m_vecAbsOrigin[0] + mv->m_vecVelocity[0]*gpGlobals->frametime;
+	dest[1] = mv->m_vecAbsOrigin[1] + mv->m_vecVelocity[1]*gpGlobals->frametime;	
+	dest[2] = mv->m_vecAbsOrigin[2];
+
+	// first try moving directly to the next spot
+	TracePlayerBBox( mv->m_vecAbsOrigin, dest, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, pm );
+
+	// If we made it all the way, then copy trace end as new player position.
+	mv->m_outWishVel += wishdir * wishspeed;
+
+	if ( pm.fraction == 1 )
+	{
+		VectorCopy( pm.endpos, mv->m_vecAbsOrigin );
+		// Now pull the base velocity back out.   Base velocity is set if you are on a moving object, like a conveyor (or maybe another monster?)
+		VectorSubtract( mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+
+		StayOnGround();
+		return;
+	}
+
+	// Don't walk up stairs if not on ground.
+	if ( oldground == NULL && player->GetWaterLevel()  == 0 )
+	{
+		// Now pull the base velocity back out.   Base velocity is set if you are on a moving object, like a conveyor (or maybe another monster?)
+		VectorSubtract( mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+		return;
+	}
+
+	// If we are jumping out of water, don't do anything more.
+	if ( player->m_flWaterJumpTime )         
+	{
+		// Now pull the base velocity back out.   Base velocity is set if you are on a moving object, like a conveyor (or maybe another monster?)
+		VectorSubtract( mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+		return;
+	}
+
+	StepMove( dest, pm );
+
+	// Now pull the base velocity back out.   Base velocity is set if you are on a moving object, like a conveyor (or maybe another monster?)
+	VectorSubtract( mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
+
+	StayOnGround();
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Getting this dash working Lemuel
+//-----------------------------------------------------------------------------
+void CGameMovement::Dash( void )
+{
+	CHLMoveData *pMoveData = ( CHLMoveData* )mv;
+
+	if ( pMoveData->m_bIsSprinting)
+	{
+		if(mv->m_nOldButtons |= IN_RUN)
+		{
+			WalkMove2();
+			
+		}
+	}
+}
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CGameMovement::FullWalkMove( )
@@ -1686,6 +1834,11 @@ void CGameMovement::FullWalkMove( )
 		if (player->GetGroundEntity() != NULL)
 		{
 			WalkMove();
+			//Lemuel Wilson dat Dash homie
+			if (mv->m_nOldButtons |= IN_RUN)
+			{
+				Dash();
+			}
 		}
 		else
 		{
@@ -1930,7 +2083,6 @@ void CGameMovement::PlaySwimSound()
 //-----------------------------------------------------------------------------
 bool CGameMovement::CheckJumpButton( void )
 {
-	int dj = 0;
 	if (player->pl.deadflag)
 	{
 		mv->m_nOldButtons |= IN_JUMP ;	// don't jump again until released
@@ -1970,13 +2122,10 @@ bool CGameMovement::CheckJumpButton( void )
 		return false;
 	}
 
+	//Lemeul Wilson - I have no clue how to get the button to check it self in a look an only limit it to two jumps
+	//
+
 	// No more effect
-	while ((player->GetGroundEntity() == NULL) && dj > 1)
-	{
-		mv->m_nOldButtons |= IN_JUMP;
-		return false;		// in air, so no effect
-		dj++;
-	}
  	/*if (player->GetGroundEntity() == NULL)
 	{ 
 		mv->m_nOldButtons |= IN_JUMP;
@@ -1989,8 +2138,8 @@ bool CGameMovement::CheckJumpButton( void )
 		return false;
 #endif
 
-	/*if ( mv->m_nOldButtons & IN_JUMP )
-		return false;		// don't pogo stick*/
+	if ( mv->m_nOldButtons & IN_JUMP )
+		return false;		// don't pogo stick
 
 	// Cannot jump will in the unduck transition.
 	if ( player->m_Local.m_bDucking && (  player->GetFlags() & FL_DUCKING ) )
