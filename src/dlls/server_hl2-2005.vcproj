@@ -4433,6 +4433,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\cl_dll\c_baseplayer.h"
+					>
+				</File>
+				<File
 					RelativePath="..\game_shared\tf2\env_laserdesignation.h"
 					>
 				</File>

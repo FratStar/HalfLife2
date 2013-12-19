@@ -24,7 +24,13 @@
 #define GAMEMOVEMENT_JUMP_HEIGHT			21.0f		// units
 #define GAMEMOVEMENT_TIME_TO_UNDUCK			( TIME_TO_UNDUCK * 1000.0f )		// ms
 #define GAMEMOVEMENT_TIME_TO_UNDUCK_INV		( GAMEMOVEMENT_DUCK_TIME - GAMEMOVEMENT_TIME_TO_UNDUCK )
-
+//Lemuel Wilson
+#define JUMP               200.0  //how much to jump, normal is a bit more than this (~260?)
+#define RISEACCEL          15.0   //rise acceleration
+#define MAXFALLRATE       -240.0  //max fall rate, true fall rate will be a little more than this because of gravity
+#define FALLDECEL          25.0   //deceleration, units? haha...
+#define JUMPLIMIT            0.8  //time limit in seconds
+//Lemuel Wilson
 struct surfacedata_t;
 
 class CBasePlayer;
@@ -236,6 +242,17 @@ protected:
 	virtual unsigned int PlayerSolidMask( bool brushOnly = false );	///< returns the solid mask for the given player, so bots can have a more-restrictive set
 
 private:
+	//Lemuel Wilson
+   float   m_fLastJumpTime;         //the last jump time (seconds)
+   float   m_fLastTimeThrough;      //the last time we went through this code
+   int     m_iNumJumps;             //the number of times we've hit jump in this series of jumps
+   bool    m_bFirstTimeThrough;     //is this the first time through this func for this press of jump
+
+   bool    currInAir;               //are we currently in the air
+   bool    prevInAir;               //were we in the air last time through?
+   bool    newJump;                 //is this a new jump?
+   bool    supressJump;             //should i shortcircuit out of this jump?
+	//Lemuel Wilson
 	// Performs the collision resolution for fliers.
 	void			PerformFlyCollisionResolution( trace_t &pm, Vector &move );
 
@@ -255,6 +272,7 @@ protected:
 	bool			m_bSpeedCropped;
 
 	float			m_flStuckCheckTime[MAX_PLAYERS+1][2]; // Last time we did a full test
+	surfacedata_t*	m_pSurfaceData;
 };
 
 

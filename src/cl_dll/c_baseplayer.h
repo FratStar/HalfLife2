@@ -438,6 +438,9 @@ private:
 	friend class CCSGameMovement;
 	friend class CHL2GameMovement;
 	friend class CDODGameMovement;
+	//Lemuel Wilson
+	friend class CSDKGameMovement;
+	//Lemuel Wilson
 	
 	// Accessors for gamemovement
 	float GetStepSize( void ) const { return m_Local.m_flStepSize; }

@@ -168,6 +168,17 @@ CGameMovement::CGameMovement( void )
 	mv					= NULL;
 
 	memset( m_flStuckCheckTime, 0, sizeof(m_flStuckCheckTime) );
+	//Lemuel Wilson
+	//initialize stuff
+    m_iNumJumps = 0;             
+    m_bFirstTimeThrough = true;  
+    m_fLastJumpTime = -1;
+    m_fLastTimeThrough = -1;
+    currInAir = false;
+    prevInAir = false;
+    newJump = false;
+    supressJump = false;
+	//Lemuel Wilson
 }
 
 //-----------------------------------------------------------------------------
@@ -2077,7 +2088,192 @@ void CGameMovement::PlaySwimSound()
 	MoveHelper()->StartSound( mv->m_vecAbsOrigin, "Player.Swim" );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+//Lemuel Wilson
+bool CGameMovement::CheckJumpButton( void )
+{
+//if dead, kill this jump
+   if(player->pl.deadflag)
+   {
+      mv->m_nOldButtons |= IN_JUMP;
+      m_iNumJumps = 0;
+      return false;
+   }
 
+   // See if we are waterjumping.  If so, decrement count and return.
+   if (player->m_flWaterJumpTime)
+   {
+      player->m_flWaterJumpTime -= gpGlobals->frametime;
+      if (player->m_flWaterJumpTime < 0)
+         player->m_flWaterJumpTime = 0;
+
+      m_iNumJumps = 0;
+      return false;
+   }
+
+   // If we are in the water most of the way...
+   if ( player->GetWaterLevel() >= 2 )
+   {   
+      // swimming, not jumping
+      SetGroundEntity( (CBaseEntity *)NULL );
+
+      if(player->GetWaterType() == CONTENTS_WATER)    // We move up a certain amount
+         mv->m_vecVelocity[2] = 100;
+      else if (player->GetWaterType() == CONTENTS_SLIME)
+         mv->m_vecVelocity[2] = 80;
+
+      // play swiming sound
+      if ( player->m_flSwimSoundTime <= 0 )
+      {
+         // Don't play sound again for 1 second
+         player->m_flSwimSoundTime = 1000;
+         PlaySwimSound();
+      }
+      m_iNumJumps = 0;
+      return false;
+   }
+
+   // Don't allow jumping for the following
+   if ( player->m_Local.m_bSlowMovement 
+      || (player->m_Local.m_bDucking && (  player->GetFlags() & FL_DUCKING ))
+      || ( player->m_Local.m_flDuckJumpTime > 0.0f ))
+   {
+      m_iNumJumps = 0;
+      return false;
+   }
+	//if it has been more than two frames since the last time this function was called, this is a new jump
+   if(gpGlobals->curtime - m_fLastTimeThrough > 2*gpGlobals->frametime)
+      newJump = true;
+   else
+      newJump = false;
+
+   //if this was a new jump, incrememt the jump count, make it first time through, and log the time
+   if(newJump)
+   {
+      m_iNumJumps++;
+      m_bFirstTimeThrough = true;
+      m_fLastJumpTime = gpGlobals->curtime;
+      m_fLastTimeThrough = gpGlobals->curtime;
+   }
+   //Determine the inAir state
+   prevInAir = currInAir;
+   currInAir = (player->GetGroundEntity() == NULL);
+
+    // are we in the air?
+   if (currInAir)
+   {
+      //if we are still rising, and its past our time limit for rising, then stop rising
+      if((m_iNumJumps == 1 && gpGlobals->curtime - m_fLastJumpTime > JUMPLIMIT))
+      {
+         mv->m_nOldButtons |= IN_JUMP;
+         return false;   
+      }
+   }
+   else   //we are on the ground so we can jump!
+   {
+      if(prevInAir)
+      {
+         if(!newJump)
+         {
+            //if we were in the air and this isnt a new jump, you're gonna pogo jump
+            //unless we do something about it.  So we will supress the next jumps
+            mv->m_nOldButtons |= IN_JUMP;
+            supressJump = true;   //tells us to supress the pogo jumping
+            m_iNumJumps = 0;
+            prevInAir = false;
+            return false;
+         }
+      }
+
+      //sanity check.  if we're not in the air and you're jumping then this is your first jump
+      m_iNumJumps = 1;
+      prevInAir = false;
+
+      //play sound and animation for jumping off ground
+//      player->PlayStepSound( mv->m_vecAbsOrigin, m_pSurfaceData, 1.0, true );   
+      MoveHelper()->PlayerSetAnimation( PLAYER_JUMP );
+   }
+
+   //if we were supposed to supress pogo jumps
+   if(supressJump)
+   {
+      //only supress until the last button wasnt jump
+      if(mv->m_nOldButtons & IN_JUMP)
+         return false;
+   }
+   //when the user lets go of jump and hits it again, the code will fall through to here and we wont supress anymore
+   supressJump = false;
+
+   // In the air now, so we dont have a ground entity
+   SetGroundEntity( (CBaseEntity *)NULL );
+
+   //figure out if the ground will effect our jump
+   float flGroundFactor = 1.0f;
+   if (m_pSurfaceData)
+      flGroundFactor = m_pSurfaceData->game.jumpFactor;
+
+   // If we are ducking, only allow a normal jump
+   float startz = mv->m_vecVelocity[2];
+   if ( (  player->m_Local.m_bDucking ) || (  player->GetFlags() & FL_DUCKING ) )
+   {
+      //only allow jumping once
+      if(m_iNumJumps <= 1)
+         mv->m_vecVelocity[2] = flGroundFactor*JUMP;
+   }
+   else
+   {
+      //we arent ducking, this is the second time we hit jump, so go into float mode
+      if(m_iNumJumps > 1)
+      {
+         //if we get within +-50 of our terminal velocity, just start going that speed
+         float diff = MAXFALLRATE - mv->m_vecVelocity[2];
+         if(diff < 50 && diff > -50)
+         {
+            mv->m_vecVelocity[2] = MAXFALLRATE;
+         }
+         //only reduce fall rate if we're falling faster than the max fall rate
+         else if(mv->m_vecVelocity[2] < MAXFALLRATE)
+         {
+            //decelerate us, taking the tick rate into consideration (cpu speed wont effect rate of fall/rise)
+            //the *100 is just cause frametime is REALLY small
+            mv->m_vecVelocity[2]  += (FALLDECEL*gpGlobals->frametime)*100;  
+            //dont want to shoot up over maxfallrate
+            if(mv->m_vecVelocity[2] > MAXFALLRATE)
+               mv->m_vecVelocity[2] = MAXFALLRATE;
+         }
+      }
+      else
+      {
+         //if this is the first jump vs the sustaining jumps
+         if(m_bFirstTimeThrough)
+            mv->m_vecVelocity[2] += (flGroundFactor * JUMP);  //regular jump to get us up quick
+         else
+            mv->m_vecVelocity[2] += (RISEACCEL*gpGlobals->frametime)*100;  //accelerate up
+      }
+   }
+
+   //allow gravity to do its thing
+   FinishGravity();
+
+   //stick the results of our meddling into the jump results vector
+   mv->m_outJumpVel.z += mv->m_vecVelocity[2] - startz;
+   mv->m_outStepHeight += 0.15f;
+
+   // Flag that we jumped.
+   mv->m_nOldButtons |= IN_JUMP;
+   //its no longer our first time through
+   m_bFirstTimeThrough = false;
+   m_fLastTimeThrough = gpGlobals->curtime;
+
+   return true;
+   //Lemuel Wilson
+
+}
+
+
+/*
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -2126,11 +2322,11 @@ bool CGameMovement::CheckJumpButton( void )
 	//
 
 	// No more effect
- 	/*if (player->GetGroundEntity() == NULL)
+ 	if (player->GetGroundEntity() == NULL)
 	{ 
 		mv->m_nOldButtons |= IN_JUMP;
 		return false;		// in air, so no effect
-	}*/
+	}
 	
 	// Don't allow jumping when the player is in a stasis field.
 #ifndef HL2_EPISODIC
@@ -2257,7 +2453,7 @@ bool CGameMovement::CheckJumpButton( void )
 	return true;
 }
 
-
+*/
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
